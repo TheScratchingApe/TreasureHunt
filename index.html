@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Treasure Hunt</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+      }
+      #grid {
+        display: grid;
+        grid-template-columns: repeat(5, 60px);
+        grid-gap: 5px;
+      }
+      .cell {
+        width: 60px;
+        height: 60px;
+        background-color: #ddd;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        font-size: 24px;
+      }
+      .opened {
+        background-color: #fff;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="grid"></div>
+    <script>
+      const grid = document.getElementById("grid");
+
+      for (let i = 0; i < 25; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.dataset.index = i;
+        cell.addEventListener("click", () => {
+          if (!cell.classList.contains("opened")) {
+            cell.classList.add("opened");
+            fetch("https://your-telegram-bot-server-url/treasure", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ index: i }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.isTreasure) {
+                  cell.textContent = "💰";
+                  alert("You found a treasure!");
+                } else {
+                  cell.textContent = "❌";
+                }
+              });
+          }
+        });
+        grid.appendChild(cell);
+      }
+    </script>
+  </body>
+</html>
