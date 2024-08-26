@@ -38,31 +38,69 @@
     <script>
       const grid = document.getElementById("grid");
 
+      // URL de ton serveur Flask
+      const serverUrl = "http://192.168.1.29:5000";
+
+      // Charger les cases déjà ouvertes depuis le serveur
+      fetch(`${serverUrl}/opened_cells`)
+        .then((response) => response.json())
+        .then((openedIndices) => {
+          openedIndices.forEach((index) => {
+            const cell = grid.children[index];
+            cell.classList.add("opened");
+            cell.textContent = "❌"; // Indique visuellement que la case est déjà ouverte
+          });
+        })
+        .catch((error) => {
+          console.error(
+            "Erreur lors de la récupération des cases ouvertes:",
+            error
+          );
+        });
+
+      // Créer la grille de jeu
       for (let i = 0; i < 25; i++) {
         const cell = document.createElement("div");
         cell.className = "cell";
         cell.dataset.index = i;
+
+        // Gérer le clic sur une case
         cell.addEventListener("click", () => {
           if (!cell.classList.contains("opened")) {
-            cell.classList.add("opened");
-            fetch("https://t.me/TestBooooooooootBot/TreasureHunt", {
+            fetch(`${serverUrl}/treasure`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({ index: i }),
             })
-              .then((response) => response.json())
+              .then((response) => {
+                if (!response.ok) {
+                  return response.json().then((err) => {
+                    throw new Error(err.error);
+                  });
+                }
+                return response.json();
+              })
               .then((data) => {
+                cell.classList.add("opened");
                 if (data.isTreasure) {
                   cell.textContent = "💰";
                   alert("You found a treasure!");
                 } else {
                   cell.textContent = "❌";
                 }
+              })
+              .catch((error) => {
+                if (error.message === "Cell already opened") {
+                  alert("Cette case a déjà été ouverte.");
+                } else {
+                  console.error("Erreur:", error);
+                }
               });
           }
         });
+
         grid.appendChild(cell);
       }
     </script>
